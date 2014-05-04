@@ -1,0 +1,35 @@
+{
+    "name": "philiprehberger/php-csv",
+    "description": "Memory-efficient CSV reader and writer with header mapping and type casting",
+    "keywords": ["csv", "reader", "writer", "parser", "generator", "type-casting"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Philip Rehberger",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "phpstan/phpstan": "^1.12|^2.0",
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhilipRehberger\\Csv\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhilipRehberger\\Csv\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

@@ -1,0 +1,208 @@
+<?php
+
+declare(strict_types=1);
+
+namespace PhilipRehberger\Csv\Tests;
+
+use PhilipRehberger\Csv\Csv;
+use PhilipRehberger\Csv\Exceptions\CsvReadException;
+use PHPUnit\Framework\TestCase;
+
+class CsvTest extends TestCase
+{
+    /** @var array<int, string> */
+    private array $tempFiles = [];
+
+    protected function tearDown(): void
+    {
+        foreach ($this->tempFiles as $file) {
+            if (file_exists($file)) {
+                unlink($file);
+            }
+        }
+
+        $this->tempFiles = [];
+    }
+
+    private function tempFile(string $content = ''): string
+    {
+        $path = sys_get_temp_dir().'/php_csv_test_'.uniqid().'.csv';
+        $this->tempFiles[] = $path;
+
+        if ($content !== '') {
+            file_put_contents($path, $content);
+        }
+
+        return $path;
+    }
+
+    public function test_read_csv_with_headers(): void
+    {
+        $csv = "name,age,city\nAlice,30,Berlin\nBob,25,Vienna\n";
+        $rows = Csv::readString($csv)->toArray();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame('30', $rows[0]['age']);
+        $this->assertSame('Berlin', $rows[0]['city']);
+        $this->assertSame('Bob', $rows[1]['name']);
+    }
+
+    public function test_read_csv_without_headers(): void
+    {
+        $csv = "Alice,30,Berlin\nBob,25,Vienna\n";
+        $rows = Csv::readString($csv)->hasHeader(false)->toArray();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0][0]);
+        $this->assertSame('30', $rows[0][1]);
+    }
+
+    public function test_read_csv_with_type_casting(): void
+    {
+        $csv = "name,age,score,active,note\nAlice,42,3.14,true,\nBob,25,9.99,false,hello\n";
+        $rows = Csv::readString($csv)->castTypes(true)->toArray();
+
+        $this->assertSame(42, $rows[0]['age']);
+        $this->assertSame(3.14, $rows[0]['score']);
+        $this->assertTrue($rows[0]['active']);
+        $this->assertNull($rows[0]['note']);
+        $this->assertSame(25, $rows[1]['age']);
+        $this->assertFalse($rows[1]['active']);
+        $this->assertSame('hello', $rows[1]['note']);
+    }
+
+    public function test_read_csv_with_custom_delimiter(): void
+    {
+        $csv = "name;age;city\nAlice;30;Berlin\n";
+        $rows = Csv::readString($csv)->delimiter(';')->toArray();
+
+        $this->assertCount(1, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame('Berlin', $rows[0]['city']);
+    }
+
+    public function test_read_csv_skips_empty_rows(): void
+    {
+        $csv = "name,age\nAlice,30\n\nBob,25\n";
+        $rows = Csv::readString($csv)->skipEmpty(true)->toArray();
+
+        $this->assertCount(2, $rows);
+    }
+
+    public function test_read_csv_filter(): void
+    {
+        $csv = "name,age\nAlice,30\nBob,25\nCharlie,35\n";
+        $rows = Csv::readString($csv)
+            ->castTypes(true)
+            ->filter(fn (array $row): bool => $row['age'] >= 30)
+            ->toArray();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame('Charlie', $rows[1]['name']);
+    }
+
+    public function test_read_csv_map(): void
+    {
+        $csv = "name,age\nAlice,30\nBob,25\n";
+        $rows = Csv::readString($csv)
+            ->map(fn (array $row): array => [...$row, 'upper' => strtoupper($row['name'])])
+            ->toArray();
+
+        $this->assertSame('ALICE', $rows[0]['upper']);
+        $this->assertSame('BOB', $rows[1]['upper']);
+    }
+
+    public function test_read_csv_each(): void
+    {
+        $csv = "name\nAlice\nBob\n";
+        $names = [];
+
+        Csv::readString($csv)->each(function (array $row) use (&$names): void {
+            $names[] = $row['name'];
+        });
+
+        $this->assertSame(['Alice', 'Bob'], $names);
+    }
+
+    public function test_read_csv_count(): void
+    {
+        $csv = "name,age\nAlice,30\nBob,25\nCharlie,35\n";
+        $count = Csv::readString($csv)->count();
+
+        $this->assertSame(3, $count);
+    }
+
+    public function test_read_csv_from_file(): void
+    {
+        $path = $this->tempFile("name,age\nAlice,30\n");
+        $rows = Csv::read($path)->toArray();
+
+        $this->assertCount(1, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+    }
+
+    public function test_read_csv_file_not_found(): void
+    {
+        $this->expectException(CsvReadException::class);
+        $this->expectExceptionMessage('File not found');
+
+        Csv::read('/nonexistent/path/file.csv');
+    }
+
+    public function test_write_csv_to_file(): void
+    {
+        $path = $this->tempFile();
+
+        Csv::write($path)
+            ->headers(['name', 'age'])
+            ->row(['name' => 'Alice', 'age' => 30])
+            ->row(['name' => 'Bob', 'age' => 25])
+            ->save();
+
+        $content = file_get_contents($path);
+        $this->assertIsString($content);
+        $this->assertStringContainsString('name,age', $content);
+        $this->assertStringContainsString('Alice,30', $content);
+        $this->assertStringContainsString('Bob,25', $content);
+    }
+
+    public function test_write_csv_to_string(): void
+    {
+        $output = Csv::write('')
+            ->headers(['name', 'age'])
+            ->rows([
+                ['name' => 'Alice', 'age' => 30],
+                ['name' => 'Bob', 'age' => 25],
+            ])
+            ->toString();
+
+        $this->assertStringContainsString('name,age', $output);
+        $this->assertStringContainsString('Alice,30', $output);
+    }
+
+    public function test_write_csv_with_bom(): void
+    {
+        $output = Csv::write('')
+            ->headers(['name'])
+            ->row(['name' => 'Alice'])
+            ->bom(true)
+            ->toString();
+
+        $this->assertStringStartsWith("\xEF\xBB\xBF", $output);
+    }
+
+    public function test_reader_is_iterable(): void
+    {
+        $csv = "name\nAlice\nBob\n";
+        $reader = Csv::readString($csv);
+
+        $names = [];
+        foreach ($reader as $row) {
+            $names[] = $row['name'];
+        }
+
+        $this->assertSame(['Alice', 'Bob'], $names);
+    }
+}
