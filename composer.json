@@ -1,7 +1,9 @@
 {
     "name": "philiprehberger/php-csv",
     "description": "Memory-efficient CSV reader and writer with header mapping and type casting",
+    "type": "library",
     "keywords": ["csv", "reader", "writer", "parser", "generator", "type-casting"],
+    "homepage": "https://github.com/philiprehberger/php-csv",
     "license": "MIT",
     "authors": [
         {
@@ -29,6 +31,11 @@
     },
     "config": {
         "sort-packages": true
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "lint": "vendor/bin/pint",
+        "analyse": "vendor/bin/phpstan analyse"
     },
     "minimum-stability": "dev",
     "prefer-stable": true
