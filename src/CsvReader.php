@@ -34,6 +34,15 @@ class CsvReader implements IteratorAggregate
     /** @var callable|null */
     private $mapCallback = null;
 
+    /** @var callable|null */
+    private $validator = null;
+
+    /** @var callable|null */
+    private $progressCallback = null;
+
+    /** @var array<int, array{row: int, error: string}> */
+    private array $validationErrors = [];
+
     /**
      * Create a new CSV reader instance.
      *
@@ -124,6 +133,42 @@ class CsvReader implements IteratorAggregate
     }
 
     /**
+     * Set a validation callback. Rows that fail validation are skipped.
+     *
+     * The callback receives a row and should return true to keep it.
+     * If it returns false or throws an exception, the row is skipped
+     * and the error is collected in the validation errors list.
+     */
+    public function validate(callable $validator): self
+    {
+        $this->validator = $validator;
+
+        return $this;
+    }
+
+    /**
+     * Set a progress callback invoked after each row is processed.
+     *
+     * The callback receives the current row number (1-based).
+     */
+    public function withProgress(callable $callback): self
+    {
+        $this->progressCallback = $callback;
+
+        return $this;
+    }
+
+    /**
+     * Get validation errors collected during the last read.
+     *
+     * @return array<int, array{row: int, error: string}>
+     */
+    public function getValidationErrors(): array
+    {
+        return $this->validationErrors;
+    }
+
+    /**
      * Iterate over each row, executing the callback.
      */
     public function each(callable $callback): void
@@ -195,9 +240,13 @@ class CsvReader implements IteratorAggregate
             $headers = $headerRow;
         }
 
+        $this->validationErrors = [];
         $index = 0;
+        $rowNumber = 0;
 
         while (($fields = fgetcsv($this->stream, 0, $this->delimiter, $this->enclosure, $this->escape)) !== false) {
+            $rowNumber++;
+
             if ($this->skipEmpty && $fields === [null]) {
                 continue;
             }
@@ -211,6 +260,20 @@ class CsvReader implements IteratorAggregate
                 ? array_combine($headers, array_pad($fields, count($headers), null))
                 : $fields;
 
+            if ($this->validator !== null) {
+                try {
+                    if (! ($this->validator)($row)) {
+                        $this->validationErrors[] = ['row' => $rowNumber, 'error' => 'Validation failed'];
+
+                        continue;
+                    }
+                } catch (\Throwable $e) {
+                    $this->validationErrors[] = ['row' => $rowNumber, 'error' => $e->getMessage()];
+
+                    continue;
+                }
+            }
+
             if ($this->filterCallback !== null && ! ($this->filterCallback)($row)) {
                 continue;
             }
@@ -221,6 +284,10 @@ class CsvReader implements IteratorAggregate
 
             yield $index => $row;
             $index++;
+
+            if ($this->progressCallback !== null) {
+                ($this->progressCallback)($rowNumber);
+            }
         }
     }
 

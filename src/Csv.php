@@ -59,4 +59,15 @@ class Csv
     {
         return new CsvWriter($path);
     }
+
+    /**
+     * Create a new streaming CSV writer for a file path.
+     *
+     * Unlike `write()`, the streaming writer flushes rows directly to disk
+     * without buffering, making it suitable for very large files.
+     */
+    public static function streamWrite(string $path, string $delimiter = ','): StreamingWriter
+    {
+        return new StreamingWriter($path, $delimiter);
+    }
 }

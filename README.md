@@ -71,6 +71,48 @@ $rows = Csv::read('data.csv')
     ->toArray();
 ```
 
+### Row Validation
+
+Validate each row during reading. Invalid rows are skipped and errors are collected:
+
+```php
+$reader = Csv::read('data.csv')
+    ->validate(fn (array $row) => isset($row['email']) && str_contains($row['email'], '@'));
+
+$rows = $reader->toArray();
+
+// Inspect which rows failed validation
+foreach ($reader->getValidationErrors() as $error) {
+    echo "Row {$error['row']}: {$error['error']}\n";
+}
+```
+
+The validator can also throw an exception to provide a specific error message:
+
+```php
+$reader = Csv::read('data.csv')
+    ->validate(function (array $row) {
+        if (empty($row['name'])) {
+            throw new \InvalidArgumentException('Name is required');
+        }
+        return true;
+    });
+```
+
+### Progress Tracking
+
+Monitor processing progress with a callback invoked after each row:
+
+```php
+Csv::read('large-file.csv')
+    ->withProgress(function (int $rowNumber) {
+        if ($rowNumber % 1000 === 0) {
+            echo "Processed {$rowNumber} rows...\n";
+        }
+    })
+    ->each(fn (array $row) => processRow($row));
+```
+
 ### Custom delimiters
 
 ```php
@@ -97,6 +139,23 @@ $csv = Csv::write('')
     ->toString();
 ```
 
+### Streaming Writer
+
+Write rows directly to disk without buffering, ideal for very large files:
+
+```php
+use PhilipRehberger\Csv\Csv;
+
+$writer = Csv::streamWrite('large-output.csv');
+$writer->writeHeader(['id', 'name', 'value']);
+
+foreach ($dataSource as $record) {
+    $writer->writeRow([$record->id, $record->name, $record->value]);
+}
+
+$writer->close();
+```
+
 ### BOM for Excel
 
 Prepend a UTF-8 BOM for Excel compatibility:
@@ -120,6 +179,7 @@ Csv::write('output.csv')
 | `Csv::read(string $path): CsvReader` | Create a reader from a file path |
 | `Csv::readString(string $content): CsvReader` | Create a reader from a string |
 | `Csv::write(string $path): CsvWriter` | Create a writer for a file path |
+| `Csv::streamWrite(string $path, string $delimiter = ','): StreamingWriter` | Create a streaming writer for a file path |
 
 ### `CsvReader`
 
@@ -132,6 +192,9 @@ Csv::write('output.csv')
 | `castTypes(bool $flag): self` | Auto-detect types: int, float, bool, null |
 | `filter(callable $fn): self` | Filter rows by a predicate |
 | `map(callable $fn): self` | Transform each row |
+| `validate(callable $fn): self` | Validate rows; invalid ones are skipped |
+| `withProgress(callable $fn): self` | Set a progress callback (receives row number) |
+| `getValidationErrors(): array` | Get errors from the last read |
 | `each(callable $fn): void` | Execute a callback for each row |
 | `toArray(): array` | Collect all rows into an array |
 | `count(): int` | Count the number of rows |
@@ -147,6 +210,16 @@ Csv::write('output.csv')
 | `bom(bool $flag): self` | Prepend UTF-8 BOM for Excel |
 | `save(): void` | Write to the configured file path |
 | `toString(): string` | Return the CSV as a string |
+
+### `StreamingWriter`
+
+| Method | Description |
+|--------|-------------|
+| `writeHeader(array $headers): void` | Write the header row |
+| `writeRow(array $row): void` | Write a single data row |
+| `writeRows(array $rows): void` | Write multiple data rows |
+| `isHeaderWritten(): bool` | Whether the header has been written |
+| `close(): void` | Close the file handle |
 
 ---
 

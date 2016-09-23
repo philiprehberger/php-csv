@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-03-16
+
+### Added
+- Row validation via `validate(callable)` on CsvReader — skip invalid rows and collect errors
+- Progress tracking via `withProgress(callable)` on CsvReader — callback after each row
+- `getValidationErrors()` method to retrieve validation failures from the last read
+- `StreamingWriter` class for writing rows directly to disk without buffering
+- `Csv::streamWrite()` static factory method for creating streaming writers
+
 ## [1.0.2] - 2026-03-16
 
 ### Changed
