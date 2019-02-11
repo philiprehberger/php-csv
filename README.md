@@ -6,23 +6,15 @@
 
 Memory-efficient CSV reader and writer with header mapping and type casting.
 
----
-
 ## Requirements
 
-| Dependency | Version |
-|------------|---------|
-| PHP        | ^8.2    |
-
----
+- PHP 8.2+
 
 ## Installation
 
 ```bash
 composer require philiprehberger/php-csv
 ```
-
----
 
 ## Usage
 
@@ -167,8 +159,6 @@ Csv::write('output.csv')
     ->save();
 ```
 
----
-
 ## API
 
 ### `Csv` (static entry)
@@ -219,8 +209,6 @@ Csv::write('output.csv')
 | `writeRows(array $rows): void` | Write multiple data rows |
 | `isHeaderWritten(): bool` | Whether the header has been written |
 | `close(): void` | Close the file handle |
-
----
 
 ## Development
 
