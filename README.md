@@ -104,6 +104,29 @@ Csv::read('large-file.csv')
     ->each(fn (array $row) => processRow($row));
 ```
 
+### First and last rows
+
+Quickly access the first or last data row without loading everything into an array:
+
+```php
+$first = Csv::read('data.csv')->firstRow();
+// ['name' => 'Alice', 'age' => '30', ...]
+
+$last = Csv::read('data.csv')->lastRow();
+// ['name' => 'Zoe', 'age' => '28', ...]
+```
+
+Both methods return `null` if the CSV has no data rows.
+
+### Grouping rows
+
+Group rows by a column value into an associative array:
+
+```php
+$groups = Csv::read('data.csv')->groupBy('city');
+// ['Berlin' => [['name' => 'Alice', ...], ...], 'Vienna' => [...]]
+```
+
 ### Custom delimiters
 
 ```php
@@ -147,6 +170,17 @@ foreach ($dataSource as $record) {
 $writer->close();
 ```
 
+### Appending to an existing file
+
+Append rows to an existing CSV without writing headers again:
+
+```php
+Csv::write('output.csv')
+    ->headers(['name', 'age'])
+    ->row(['name' => 'Charlie', 'age' => 35])
+    ->appendToFile('output.csv');
+```
+
 ### BOM for Excel
 
 Prepend a UTF-8 BOM for Excel compatibility:
@@ -186,6 +220,9 @@ Csv::write('output.csv')
 | `getValidationErrors(): array` | Get errors from the last read |
 | `each(callable $fn): void` | Execute a callback for each row |
 | `toArray(): array` | Collect all rows into an array |
+| `firstRow(): ?array` | Return the first data row or null |
+| `lastRow(): ?array` | Return the last data row or null |
+| `groupBy(string $column): array` | Group rows by a column value |
 | `count(): int` | Count the number of rows |
 
 ### `CsvWriter`
@@ -197,6 +234,7 @@ Csv::write('output.csv')
 | `rows(array $rows): self` | Add multiple rows |
 | `delimiter(string $char): self` | Set the field delimiter (default `,`) |
 | `bom(bool $flag): self` | Prepend UTF-8 BOM for Excel |
+| `appendToFile(string $path): self` | Append rows to an existing file (no headers) |
 | `save(): void` | Write to the configured file path |
 | `toString(): string` | Return the CSV as a string |
 

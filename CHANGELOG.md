@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-03-22
+
+### Added
+- `firstRow()` method on CsvReader — returns the first data row or null if empty
+- `lastRow()` method on CsvReader — returns the last data row or null if empty
+- `groupBy(string $column)` method on CsvReader — returns rows grouped by column value
+- `appendToFile(string $path)` method on CsvWriter — appends rows to an existing CSV file without writing headers again
+
 ## [1.1.2] - 2026-03-20
 
 ### Added

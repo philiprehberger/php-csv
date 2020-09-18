@@ -205,4 +205,100 @@ class CsvTest extends TestCase
 
         $this->assertSame(['Alice', 'Bob'], $names);
     }
+
+    public function test_first_row_returns_first_data_row(): void
+    {
+        $csv = "name,age\nAlice,30\nBob,25\n";
+        $row = Csv::readString($csv)->firstRow();
+
+        $this->assertNotNull($row);
+        $this->assertSame('Alice', $row['name']);
+        $this->assertSame('30', $row['age']);
+    }
+
+    public function test_first_row_returns_null_for_empty_csv(): void
+    {
+        $csv = "name,age\n";
+        $row = Csv::readString($csv)->firstRow();
+
+        $this->assertNull($row);
+    }
+
+    public function test_last_row_returns_last_data_row(): void
+    {
+        $csv = "name,age\nAlice,30\nBob,25\nCharlie,35\n";
+        $row = Csv::readString($csv)->lastRow();
+
+        $this->assertNotNull($row);
+        $this->assertSame('Charlie', $row['name']);
+        $this->assertSame('35', $row['age']);
+    }
+
+    public function test_last_row_returns_null_for_empty_csv(): void
+    {
+        $csv = "name,age\n";
+        $row = Csv::readString($csv)->lastRow();
+
+        $this->assertNull($row);
+    }
+
+    public function test_group_by_column(): void
+    {
+        $csv = "name,city\nAlice,Berlin\nBob,Vienna\nCharlie,Berlin\nDave,Vienna\n";
+        $groups = Csv::readString($csv)->groupBy('city');
+
+        $this->assertCount(2, $groups);
+        $this->assertArrayHasKey('Berlin', $groups);
+        $this->assertArrayHasKey('Vienna', $groups);
+        $this->assertCount(2, $groups['Berlin']);
+        $this->assertCount(2, $groups['Vienna']);
+        $this->assertSame('Alice', $groups['Berlin'][0]['name']);
+        $this->assertSame('Charlie', $groups['Berlin'][1]['name']);
+        $this->assertSame('Bob', $groups['Vienna'][0]['name']);
+        $this->assertSame('Dave', $groups['Vienna'][1]['name']);
+    }
+
+    public function test_group_by_with_missing_column(): void
+    {
+        $csv = "name,city\nAlice,Berlin\nBob,Vienna\n";
+        $groups = Csv::readString($csv)->groupBy('country');
+
+        $this->assertCount(1, $groups);
+        $this->assertArrayHasKey('', $groups);
+        $this->assertCount(2, $groups['']);
+    }
+
+    public function test_append_to_file_preserves_existing_content(): void
+    {
+        $path = $this->tempFile("name,age\nAlice,30\n");
+
+        Csv::write($path)
+            ->headers(['name', 'age'])
+            ->row(['name' => 'Bob', 'age' => 25])
+            ->row(['name' => 'Charlie', 'age' => 35])
+            ->appendToFile($path);
+
+        $rows = Csv::read($path)->toArray();
+
+        $this->assertCount(3, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame('Bob', $rows[1]['name']);
+        $this->assertSame('Charlie', $rows[2]['name']);
+    }
+
+    public function test_append_to_file_does_not_write_headers(): void
+    {
+        $path = $this->tempFile("name,age\nAlice,30\n");
+
+        Csv::write($path)
+            ->headers(['name', 'age'])
+            ->row(['name' => 'Bob', 'age' => 25])
+            ->appendToFile($path);
+
+        $content = file_get_contents($path);
+        $this->assertIsString($content);
+
+        // Headers should appear only once (from the original file)
+        $this->assertSame(1, substr_count($content, 'name,age'));
+    }
 }
