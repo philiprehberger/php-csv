@@ -43,6 +43,9 @@ class CsvReader implements IteratorAggregate
     /** @var array<int, array{row: int, error: string}> */
     private array $validationErrors = [];
 
+    /** @var array<string, callable> */
+    private array $columnTransformers = [];
+
     /**
      * Create a new CSV reader instance.
      *
@@ -144,6 +147,55 @@ class CsvReader implements IteratorAggregate
         $this->validator = $validator;
 
         return $this;
+    }
+
+    /**
+     * Register a per-column value transformer.
+     *
+     * The callable receives the column value and should return the transformed value.
+     * Transformers are applied after type casting and header mapping, before filtering.
+     */
+    public function transformColumn(string $column, callable $fn): self
+    {
+        $this->columnTransformers[$column] = $fn;
+
+        return $this;
+    }
+
+    /**
+     * Detect duplicate rows based on specified column values.
+     *
+     * Returns an array of 0-based row indices that are duplicates.
+     * The first occurrence is not considered a duplicate.
+     *
+     * @param  array<int, string>  $columns
+     * @return array<int, int>
+     */
+    public function detectDuplicates(array $columns): array
+    {
+        $seen = [];
+        $duplicates = [];
+        $index = 0;
+
+        foreach ($this->rows() as $row) {
+            $key = [];
+
+            foreach ($columns as $column) {
+                $key[] = (string) ($row[$column] ?? '');
+            }
+
+            $keyString = implode("\0", $key);
+
+            if (isset($seen[$keyString])) {
+                $duplicates[] = $index;
+            } else {
+                $seen[$keyString] = true;
+            }
+
+            $index++;
+        }
+
+        return $duplicates;
     }
 
     /**
@@ -306,6 +358,14 @@ class CsvReader implements IteratorAggregate
             $row = $headers !== null
                 ? array_combine($headers, array_pad($fields, count($headers), null))
                 : $fields;
+
+            if ($this->columnTransformers !== []) {
+                foreach ($this->columnTransformers as $column => $fn) {
+                    if (array_key_exists($column, $row)) {
+                        $row[$column] = $fn($row[$column]);
+                    }
+                }
+            }
 
             if ($this->validator !== null) {
                 try {

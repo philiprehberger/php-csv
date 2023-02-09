@@ -286,6 +286,97 @@ class CsvTest extends TestCase
         $this->assertSame('Charlie', $rows[2]['name']);
     }
 
+    public function test_read_tsv_and_write_tsv(): void
+    {
+        $output = Csv::writeTsv()
+            ->headers(['name', 'age', 'city'])
+            ->row(['name' => 'Alice', 'age' => 30, 'city' => 'Berlin'])
+            ->row(['name' => 'Bob', 'age' => 25, 'city' => 'Vienna'])
+            ->toString();
+
+        $this->assertStringContainsString("name\tage\tcity", $output);
+        $this->assertStringContainsString("Alice\t30\tBerlin", $output);
+
+        $path = $this->tempFile($output);
+        $rows = Csv::readTsv($path)->toArray();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame('30', $rows[0]['age']);
+        $this->assertSame('Berlin', $rows[0]['city']);
+        $this->assertSame('Bob', $rows[1]['name']);
+    }
+
+    public function test_read_psv_and_write_psv(): void
+    {
+        $output = Csv::writePsv()
+            ->headers(['name', 'age', 'city'])
+            ->row(['name' => 'Alice', 'age' => 30, 'city' => 'Berlin'])
+            ->row(['name' => 'Bob', 'age' => 25, 'city' => 'Vienna'])
+            ->toString();
+
+        $this->assertStringContainsString('name|age|city', $output);
+        $this->assertStringContainsString('Alice|30|Berlin', $output);
+
+        $path = $this->tempFile($output);
+        $rows = Csv::readPsv($path)->toArray();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame('30', $rows[0]['age']);
+        $this->assertSame('Berlin', $rows[0]['city']);
+        $this->assertSame('Bob', $rows[1]['name']);
+    }
+
+    public function test_transform_column_applies_transformation(): void
+    {
+        $csv = "name,age,city\nAlice,30,Berlin\nBob,25,Vienna\n";
+        $rows = Csv::readString($csv)
+            ->transformColumn('name', fn (string $value): string => strtoupper($value))
+            ->toArray();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('ALICE', $rows[0]['name']);
+        $this->assertSame('30', $rows[0]['age']);
+        $this->assertSame('BOB', $rows[1]['name']);
+    }
+
+    public function test_transform_column_multiple_columns(): void
+    {
+        $csv = "name,age,city\nAlice,30,Berlin\n";
+        $rows = Csv::readString($csv)
+            ->transformColumn('name', fn (string $value): string => strtoupper($value))
+            ->transformColumn('city', fn (string $value): string => strtolower($value))
+            ->toArray();
+
+        $this->assertSame('ALICE', $rows[0]['name']);
+        $this->assertSame('berlin', $rows[0]['city']);
+    }
+
+    public function test_detect_duplicates_returns_correct_indices(): void
+    {
+        $csv = "name,email\nAlice,alice@example.com\nBob,bob@example.com\nCharlie,alice@example.com\nDave,dave@example.com\nEve,bob@example.com\n";
+        $duplicates = Csv::readString($csv)->detectDuplicates(['email']);
+
+        $this->assertSame([2, 4], $duplicates);
+    }
+
+    public function test_detect_duplicates_no_duplicates(): void
+    {
+        $csv = "name,email\nAlice,alice@example.com\nBob,bob@example.com\n";
+        $duplicates = Csv::readString($csv)->detectDuplicates(['email']);
+
+        $this->assertSame([], $duplicates);
+    }
+
+    public function test_detect_duplicates_multiple_columns(): void
+    {
+        $csv = "first,last,age\nAlice,Smith,30\nBob,Jones,25\nAlice,Smith,35\nAlice,Jones,30\n";
+        $duplicates = Csv::readString($csv)->detectDuplicates(['first', 'last']);
+
+        $this->assertSame([2], $duplicates);
+    }
+
     public function test_append_to_file_does_not_write_headers(): void
     {
         $path = $this->tempFile("name,age\nAlice,30\n");
