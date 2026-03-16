@@ -2,7 +2,6 @@
 
 [![Tests](https://github.com/philiprehberger/php-csv/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/php-csv/actions/workflows/tests.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/php-csv.svg)](https://packagist.org/packages/philiprehberger/php-csv)
-[![Total Downloads](https://img.shields.io/packagist/dt/philiprehberger/php-csv.svg)](https://packagist.org/packages/philiprehberger/php-csv)
 [![PHP Version Require](https://img.shields.io/packagist/php-v/philiprehberger/php-csv.svg)](https://packagist.org/packages/philiprehberger/php-csv)
 [![License](https://img.shields.io/github/license/philiprehberger/php-csv)](LICENSE)
 
