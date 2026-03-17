@@ -2,7 +2,6 @@
 
 [![Tests](https://github.com/philiprehberger/php-csv/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/php-csv/actions/workflows/tests.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/php-csv.svg)](https://packagist.org/packages/philiprehberger/php-csv)
-[![PHP Version Require](https://img.shields.io/packagist/php-v/philiprehberger/php-csv.svg)](https://packagist.org/packages/philiprehberger/php-csv)
 [![License](https://img.shields.io/github/license/philiprehberger/php-csv)](LICENSE)
 
 Memory-efficient CSV reader and writer with header mapping and type casting.
@@ -223,33 +222,15 @@ Csv::write('output.csv')
 
 ---
 
-## Testing
+## Development
 
 ```bash
 composer install
 vendor/bin/phpunit
-```
-
-Code style:
-
-```bash
-vendor/bin/pint
-```
-
-Static analysis:
-
-```bash
+vendor/bin/pint --test
 vendor/bin/phpstan analyse
 ```
 
----
-
-## Changelog
-
-Please see [CHANGELOG.md](CHANGELOG.md) for recent changes.
-
----
-
 ## License
 
-The MIT License (MIT). Please see [LICENSE](LICENSE) for more information.
+MIT
