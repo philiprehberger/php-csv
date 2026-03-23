@@ -91,6 +91,40 @@ class CsvWriter
     }
 
     /**
+     * Append rows to an existing CSV file without writing headers again.
+     *
+     * @throws CsvWriteException
+     */
+    public function appendToFile(string $path): self
+    {
+        $directory = dirname($path);
+
+        if (! is_dir($directory)) {
+            throw new CsvWriteException("Directory does not exist: {$directory}");
+        }
+
+        $stream = fopen($path, 'a');
+
+        if ($stream === false) {
+            throw new CsvWriteException("Failed to open file for appending: {$path}");
+        }
+
+        try {
+            foreach ($this->rows as $row) {
+                $values = $this->headers !== []
+                    ? $this->extractOrderedValues($row)
+                    : array_values($row);
+
+                fputcsv($stream, $values, $this->delimiter, $this->enclosure, $this->escape);
+            }
+        } finally {
+            fclose($stream);
+        }
+
+        return $this;
+    }
+
+    /**
      * Save the CSV to the configured file path.
      *
      * @throws CsvWriteException

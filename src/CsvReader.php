@@ -189,6 +189,53 @@ class CsvReader implements IteratorAggregate
     }
 
     /**
+     * Return the first data row or null if empty.
+     *
+     * @return array<string|int, mixed>|null
+     */
+    public function firstRow(): ?array
+    {
+        foreach ($this->rows() as $row) {
+            return $row;
+        }
+
+        return null;
+    }
+
+    /**
+     * Return the last data row or null if empty.
+     *
+     * @return array<string|int, mixed>|null
+     */
+    public function lastRow(): ?array
+    {
+        $last = null;
+
+        foreach ($this->rows() as $row) {
+            $last = $row;
+        }
+
+        return $last;
+    }
+
+    /**
+     * Group rows by a column value.
+     *
+     * @return array<string, array<int, array<string|int, mixed>>>
+     */
+    public function groupBy(string $column): array
+    {
+        $groups = [];
+
+        foreach ($this->rows() as $row) {
+            $key = (string) ($row[$column] ?? '');
+            $groups[$key][] = $row;
+        }
+
+        return $groups;
+    }
+
+    /**
      * Count the number of rows.
      */
     public function count(): int
