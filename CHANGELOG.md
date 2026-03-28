@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-03-27
+
+### Added
+- `Csv::readTsv()`, `Csv::writeTsv()`, `Csv::readPsv()`, `Csv::writePsv()` convenience methods
+- `CsvReader::transformColumn()` for per-column value transformation during reading
+- `CsvReader::detectDuplicates()` for identifying duplicate rows by column values
+
 ## [1.2.0] - 2026-03-22
 
 ### Added

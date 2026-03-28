@@ -1,8 +1,12 @@
 # PHP CSV
 
 [![Tests](https://github.com/philiprehberger/php-csv/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/php-csv/actions/workflows/tests.yml)
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/php-csv.svg)](https://packagist.org/packages/philiprehberger/php-csv)
+[![Packagist Version](https://img.shields.io/packagist/v/philiprehberger/php-csv.svg)](https://packagist.org/packages/philiprehberger/php-csv)
+[![GitHub Release](https://img.shields.io/github/v/release/philiprehberger/php-csv)](https://github.com/philiprehberger/php-csv/releases)
+[![Last Updated](https://img.shields.io/github/last-commit/philiprehberger/php-csv)](https://github.com/philiprehberger/php-csv/commits/main)
 [![License](https://img.shields.io/github/license/philiprehberger/php-csv)](LICENSE)
+[![Bug Reports](https://img.shields.io/github/issues/philiprehberger/php-csv/bug)](https://github.com/philiprehberger/php-csv/issues?q=label%3Abug)
+[![Feature Requests](https://img.shields.io/github/issues/philiprehberger/php-csv/enhancement)](https://github.com/philiprehberger/php-csv/issues?q=label%3Aenhancement)
 [![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 Memory-efficient CSV reader and writer with header mapping and type casting.
@@ -128,12 +132,44 @@ $groups = Csv::read('data.csv')->groupBy('city');
 // ['Berlin' => [['name' => 'Alice', ...], ...], 'Vienna' => [...]]
 ```
 
+### Column transformation
+
+Apply per-column transformations during reading:
+
+```php
+$rows = Csv::read('data.csv')
+    ->transformColumn('name', fn (string $value) => strtoupper($value))
+    ->transformColumn('age', fn (string $value) => (int) $value)
+    ->toArray();
+```
+
+### Duplicate detection
+
+Find duplicate rows based on specific columns:
+
+```php
+$duplicates = Csv::read('data.csv')->detectDuplicates(['email']);
+// [2, 5] — 0-based indices of duplicate rows
+```
+
 ### Custom delimiters
 
 ```php
 $rows = Csv::readString($tsv)
     ->delimiter("\t")
     ->toArray();
+```
+
+### TSV and PSV convenience methods
+
+```php
+// Tab-separated values
+$rows = Csv::readTsv('data.tsv')->toArray();
+$tsv = Csv::writeTsv()->headers(['name', 'age'])->rows($data)->toString();
+
+// Pipe-separated values
+$rows = Csv::readPsv('data.psv')->toArray();
+$psv = Csv::writePsv()->headers(['name', 'age'])->rows($data)->toString();
 ```
 
 ### Writing CSV
@@ -202,7 +238,11 @@ Csv::write('output.csv')
 |--------|-------------|
 | `Csv::read(string $path): CsvReader` | Create a reader from a file path |
 | `Csv::readString(string $content): CsvReader` | Create a reader from a string |
+| `Csv::readTsv(string $path): CsvReader` | Create a TSV reader from a file path |
+| `Csv::readPsv(string $path): CsvReader` | Create a PSV reader from a file path |
 | `Csv::write(string $path): CsvWriter` | Create a writer for a file path |
+| `Csv::writeTsv(): CsvWriter` | Create a TSV writer |
+| `Csv::writePsv(): CsvWriter` | Create a PSV writer |
 | `Csv::streamWrite(string $path, string $delimiter = ','): StreamingWriter` | Create a streaming writer for a file path |
 
 ### `CsvReader`
@@ -217,6 +257,8 @@ Csv::write('output.csv')
 | `filter(callable $fn): self` | Filter rows by a predicate |
 | `map(callable $fn): self` | Transform each row |
 | `validate(callable $fn): self` | Validate rows; invalid ones are skipped |
+| `transformColumn(string $column, callable $fn): self` | Apply a transformer to a specific column |
+| `detectDuplicates(array $columns): array` | Return 0-based indices of duplicate rows |
 | `withProgress(callable $fn): self` | Set a progress callback (receives row number) |
 | `getValidationErrors(): array` | Get errors from the last read |
 | `each(callable $fn): void` | Execute a callback for each row |
@@ -255,9 +297,14 @@ Csv::write('output.csv')
 composer install
 vendor/bin/phpunit
 vendor/bin/pint --test
-vendor/bin/phpstan analyse
 ```
+
+## Support
+
+- [Bug Reports](https://github.com/philiprehberger/php-csv/issues/new?labels=bug&template=bug_report.yml)
+- [Feature Requests](https://github.com/philiprehberger/php-csv/issues/new?labels=enhancement&template=feature_request.yml)
+- [GitHub Sponsors](https://github.com/sponsors/philiprehberger)
 
 ## License
 
-MIT
+[MIT](LICENSE)

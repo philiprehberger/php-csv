@@ -61,6 +61,42 @@ class Csv
     }
 
     /**
+     * Create a new TSV reader for a file path.
+     *
+     * @throws CsvReadException
+     */
+    public static function readTsv(string $path): CsvReader
+    {
+        return self::read($path)->delimiter("\t");
+    }
+
+    /**
+     * Create a new TSV writer.
+     */
+    public static function writeTsv(): CsvWriter
+    {
+        return (new CsvWriter(''))->delimiter("\t");
+    }
+
+    /**
+     * Create a new PSV (pipe-separated) reader for a file path.
+     *
+     * @throws CsvReadException
+     */
+    public static function readPsv(string $path): CsvReader
+    {
+        return self::read($path)->delimiter('|');
+    }
+
+    /**
+     * Create a new PSV (pipe-separated) writer.
+     */
+    public static function writePsv(): CsvWriter
+    {
+        return (new CsvWriter(''))->delimiter('|');
+    }
+
+    /**
      * Create a new streaming CSV writer for a file path.
      *
      * Unlike `write()`, the streaming writer flushes rows directly to disk
