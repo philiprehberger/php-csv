@@ -83,6 +83,16 @@ class CsvReader implements IteratorAggregate
     }
 
     /**
+     * Set the field escape character.
+     */
+    public function escape(string $escape): self
+    {
+        $this->escape = $escape;
+
+        return $this;
+    }
+
+    /**
      * Set whether the CSV file has a header row.
      */
     public function hasHeader(bool $hasHeader): self

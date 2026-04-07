@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-04-06
+
+### Added
+- `CsvReader::escape()` fluent setter for the field escape character
+- `CsvWriter::enclosure()` and `CsvWriter::escape()` fluent setters
+- `StreamingWriter::enclosure()` and `StreamingWriter::escape()` fluent setters
+- README API documentation for `enclosure()` / `escape()` on reader, writer, and streaming writer
+- Documented `vendor/bin/phpstan analyse` in the README Development section
+
+### Fixed
+- Test coverage for embedded delimiters, quoted newlines, and custom escape/enclosure round-trips
+
 ## [1.3.1] - 2026-03-31
 
 ### Changed

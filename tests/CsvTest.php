@@ -377,6 +377,63 @@ class CsvTest extends TestCase
         $this->assertSame([2], $duplicates);
     }
 
+    public function test_read_quoted_field_with_embedded_delimiter(): void
+    {
+        $csv = "name,description\nAlice,\"hello, world\"\nBob,\"a,b,c\"\n";
+        $rows = Csv::readString($csv)->toArray();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('hello, world', $rows[0]['description']);
+        $this->assertSame('a,b,c', $rows[1]['description']);
+    }
+
+    public function test_read_quoted_field_with_embedded_newline(): void
+    {
+        $csv = "name,note\nAlice,\"line one\nline two\"\nBob,plain\n";
+        $rows = Csv::readString($csv)->toArray();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame("line one\nline two", $rows[0]['note']);
+        $this->assertSame('plain', $rows[1]['note']);
+    }
+
+    public function test_custom_enclosure_round_trip(): void
+    {
+        $output = Csv::write('')
+            ->headers(['name', 'description'])
+            ->enclosure("'")
+            ->row(['name' => 'Alice', 'description' => 'hello, world'])
+            ->row(['name' => 'Bob', 'description' => "a'b"])
+            ->toString();
+
+        $path = $this->tempFile($output);
+        $rows = Csv::read($path)->enclosure("'")->toArray();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame('hello, world', $rows[0]['description']);
+        $this->assertSame('Bob', $rows[1]['name']);
+    }
+
+    public function test_custom_escape_character_round_trip(): void
+    {
+        $output = Csv::write('')
+            ->headers(['name', 'value'])
+            ->escape('|')
+            ->row(['name' => 'Alice', 'value' => 'plain'])
+            ->row(['name' => 'Bob', 'value' => 'with,comma'])
+            ->toString();
+
+        $path = $this->tempFile($output);
+        $rows = Csv::read($path)->escape('|')->toArray();
+
+        $this->assertCount(2, $rows);
+        $this->assertSame('Alice', $rows[0]['name']);
+        $this->assertSame('plain', $rows[0]['value']);
+        $this->assertSame('Bob', $rows[1]['name']);
+        $this->assertSame('with,comma', $rows[1]['value']);
+    }
+
     public function test_append_to_file_does_not_write_headers(): void
     {
         $path = $this->tempFile("name,age\nAlice,30\n");

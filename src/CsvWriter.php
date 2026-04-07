@@ -81,6 +81,26 @@ class CsvWriter
     }
 
     /**
+     * Set the field enclosure character.
+     */
+    public function enclosure(string $enclosure): self
+    {
+        $this->enclosure = $enclosure;
+
+        return $this;
+    }
+
+    /**
+     * Set the field escape character.
+     */
+    public function escape(string $escape): self
+    {
+        $this->escape = $escape;
+
+        return $this;
+    }
+
+    /**
      * Enable or disable BOM (Byte Order Mark) for Excel compatibility.
      */
     public function bom(bool $bom): self

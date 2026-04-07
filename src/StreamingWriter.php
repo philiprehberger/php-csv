@@ -50,6 +50,26 @@ class StreamingWriter
     }
 
     /**
+     * Set the field enclosure character.
+     */
+    public function enclosure(string $enclosure): self
+    {
+        $this->enclosure = $enclosure;
+
+        return $this;
+    }
+
+    /**
+     * Set the field escape character.
+     */
+    public function escape(string $escape): self
+    {
+        $this->escape = $escape;
+
+        return $this;
+    }
+
+    /**
      * Write the header row.
      *
      * @param  array<int, string>  $headers

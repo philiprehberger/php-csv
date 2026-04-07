@@ -246,6 +246,7 @@ Csv::write('output.csv')
 |--------|-------------|
 | `delimiter(string $char): self` | Set the field delimiter (default `,`) |
 | `enclosure(string $char): self` | Set the field enclosure (default `"`) |
+| `escape(string $char): self` | Set the field escape character (default `\`) |
 | `hasHeader(bool $flag): self` | Whether the first row is a header (default `true`) |
 | `skipEmpty(bool $flag): self` | Skip empty rows (default `true`) |
 | `castTypes(bool $flag): self` | Auto-detect types: int, float, bool, null |
@@ -271,6 +272,8 @@ Csv::write('output.csv')
 | `row(array $row): self` | Add a single row |
 | `rows(array $rows): self` | Add multiple rows |
 | `delimiter(string $char): self` | Set the field delimiter (default `,`) |
+| `enclosure(string $char): self` | Set the field enclosure (default `"`) |
+| `escape(string $char): self` | Set the field escape character (default `\`) |
 | `bom(bool $flag): self` | Prepend UTF-8 BOM for Excel |
 | `appendToFile(string $path): self` | Append rows to an existing file (no headers) |
 | `save(): void` | Write to the configured file path |
@@ -280,6 +283,8 @@ Csv::write('output.csv')
 
 | Method | Description |
 |--------|-------------|
+| `enclosure(string $char): self` | Set the field enclosure (default `"`) |
+| `escape(string $char): self` | Set the field escape character (default `\`) |
 | `writeHeader(array $headers): void` | Write the header row |
 | `writeRow(array $row): void` | Write a single data row |
 | `writeRows(array $rows): void` | Write multiple data rows |
@@ -292,6 +297,7 @@ Csv::write('output.csv')
 composer install
 vendor/bin/phpunit
 vendor/bin/pint --test
+vendor/bin/phpstan analyse
 ```
 
 ## Support
